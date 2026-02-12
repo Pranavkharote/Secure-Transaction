@@ -1,102 +1,172 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
+"use client";
+
+import { useMemo, useState } from "react";
+
 import styles from "./page.module.css";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+function pretty(value: unknown): string {
+  return JSON.stringify(value, null, 2);
+}
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [partyId, setPartyId] = useState("party_123");
+  const [payloadText, setPayloadText] = useState(
+    '{\n  "amount": 100,\n  "currency": "AED"\n}'
+  );
+  const [txId, setTxId] = useState("");
+  const [result, setResult] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [busy, setBusy] = useState(false);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
+  const canSubmit = useMemo(
+    () => partyId.trim().length > 0 && payloadText.trim().length > 0,
+    [partyId, payloadText]
+  );
+
+  async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: init?.body
+        ? {
+            "content-type": "application/json",
+            ...(init?.headers ?? {}),
+          }
+        : init?.headers,
+    });
+
+    const data = (await response.json()) as T & { error?: string };
+    if (!response.ok) {
+      throw new Error(data.error ?? "Request failed");
+    }
+    return data;
+  }
+
+  async function encryptAndSave() {
+    setBusy(true);
+    setError("");
+    try {
+      const parsedPayload = JSON.parse(payloadText);
+      const data = await request<{ id: string }>("/tx/encrypt", {
+        method: "POST",
+        body: JSON.stringify({ partyId, payload: parsedPayload }),
+      });
+      setTxId(data.id);
+      setResult(pretty(data));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setResult("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function fetchRecord() {
+    if (!txId) {
+      setError("Enter transaction id first");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    try {
+      const data = await request(`/tx/${txId}`);
+      setResult(pretty(data));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setResult("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function decryptRecord() {
+    if (!txId) {
+      setError("Enter transaction id first");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    try {
+      const data = await request(`/tx/${txId}/decrypt`, {
+        method: "POST",
+        body: "{}",
+      });
+      setResult(pretty(data));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setResult("");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <main className={styles.page}>
+      <section className={styles.panel}>
+        <h1>Secure Transactions</h1>
+        <p className={styles.subtitle}>Envelope encryption with AES-256-GCM</p>
+
+        <label className={styles.label}>
+          Party ID
+          <input
+            className={styles.input}
+            value={partyId}
+            onChange={(e) => setPartyId(e.target.value)}
+            placeholder="party_123"
+          />
+        </label>
+
+        <label className={styles.label}>
+          Payload JSON
+          <textarea
+            className={styles.textarea}
+            value={payloadText}
+            onChange={(e) => setPayloadText(e.target.value)}
+            rows={8}
+          />
+        </label>
+
+        <label className={styles.label}>
+          Transaction ID
+          <input
+            className={styles.input}
+            value={txId}
+            onChange={(e) => setTxId(e.target.value)}
+            placeholder="auto-filled after encrypt"
+          />
+        </label>
+
+        <div className={styles.actions}>
+          <button
+            className={styles.button}
+            onClick={encryptAndSave}
+            disabled={busy || !canSubmit}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
+            Encrypt and Save
+          </button>
+          <button className={styles.button} onClick={fetchRecord} disabled={busy}>
+            Fetch
+          </button>
+          <button
+            className={styles.button}
+            onClick={decryptRecord}
+            disabled={busy}
           >
-            Read our docs
-          </a>
+            Decrypt
+          </button>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
-      </footer>
-    </div>
+
+        {error ? <p className={styles.error}>{error}</p> : null}
+      </section>
+
+      <section className={styles.panel}>
+        <h2>Result</h2>
+        <pre className={styles.result}>{result || "No result yet."}</pre>
+      </section>
+    </main>
   );
 }
