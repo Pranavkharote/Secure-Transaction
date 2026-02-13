@@ -105,84 +105,105 @@ export default function Home() {
   }
 
   return (
-  <main className={styles.page}>
-  <header className={styles.header}>
-    <h1>Secure Transaction Console</h1>
-    <p className={styles.subtitle}>
-      Envelope Encryption using AES-256-GCM with Integrity Protection
-    </p>
-  </header>
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <div className={styles.headerText}>
+          <p className={styles.eyebrow}>Secure TX</p>
+          <h1>Secure Transaction Console</h1>
+          <p className={styles.subtitle}>
+            Envelope encryption with AES-256-GCM and authenticated integrity.
+          </p>
+        </div>
+        <div className={styles.headerCard}>
+          <div className={styles.metric}>
+            <span>Algorithm</span>
+            <strong>AES-256-GCM</strong>
+          </div>
+          <div className={styles.metric}>
+            <span>Integrity</span>
+            <strong>Authenticated</strong>
+          </div>
+          <div className={styles.metric}>
+            <span>Environment</span>
+            <strong>Deployed API</strong>
+          </div>
+        </div>
+      </header>
 
-  <section className={styles.panel}>
-    <h2>Transaction Input</h2>
+      <div className={styles.grid}>
+        <section className={styles.panel}>
+          <h2>Transaction Input</h2>
 
-    <div className={styles.field}>
-      <label>Party ID</label>
-      <input
-        className={styles.input}
-        value={partyId}
-        onChange={(e) => setPartyId(e.target.value)}
-        placeholder="e.g. party_123"
-      />
-    </div>
+          <div className={styles.field}>
+            <label className={styles.label}>Party ID</label>
+            <input
+              className={styles.input}
+              value={partyId}
+              onChange={(e) => setPartyId(e.target.value)}
+              placeholder="e.g. party_123"
+            />
+          </div>
 
-    <div className={styles.field}>
-      <label>Payload (JSON Format)</label>
-      <textarea
-        className={styles.textarea}
-        value={payloadText}
-        onChange={(e) => setPayloadText(e.target.value)}
-        rows={8}
-        placeholder='{"amount": 5000, "currency": "INR"}'
-      />
-    </div>
+          <div className={styles.field}>
+            <label className={styles.label}>Payload (JSON)</label>
+            <textarea
+              className={styles.textarea}
+              value={payloadText}
+              onChange={(e) => setPayloadText(e.target.value)}
+              rows={8}
+              placeholder='{"amount": 5000, "currency": "INR"}'
+            />
+            <p className={styles.help}>
+              Keep payload compact for faster round trips.
+            </p>
+          </div>
 
-    <div className={styles.field}>
-      <label>Transaction ID</label>
-      <input
-        className={styles.input}
-        value={txId}
-        onChange={(e) => setTxId(e.target.value)}
-        placeholder="Auto-generated after encryption"
-      />
-    </div>
+          <div className={styles.field}>
+            <label className={styles.label}>Transaction ID</label>
+            <input
+              className={styles.input}
+              value={txId}
+              onChange={(e) => setTxId(e.target.value)}
+              placeholder="Auto-generated after encryption"
+            />
+          </div>
 
-    <div className={styles.actions}>
-      <button
-        className={styles.primaryButton}
-        onClick={encryptAndSave}
-        disabled={busy || !canSubmit}
-      >
-        Encrypt & Store
-      </button>
+          <div className={styles.actions}>
+            <button
+              className={`${styles.button} ${styles.primaryButton}`}
+              onClick={encryptAndSave}
+              disabled={busy || !canSubmit}
+            >
+              Encrypt & Store
+            </button>
 
-      <button
-        className={styles.secondaryButton}
-        onClick={fetchRecord}
-        disabled={busy}
-      >
-        Retrieve Record
-      </button>
+            <button
+              className={`${styles.button} ${styles.secondaryButton}`}
+              onClick={fetchRecord}
+              disabled={busy}
+            >
+              Retrieve Record
+            </button>
 
-      <button
-        className={styles.dangerButton}
-        onClick={decryptRecord}
-        disabled={busy}
-      >
-        Decrypt Securely
-      </button>
-    </div>
+            <button
+              className={`${styles.button} ${styles.dangerButton}`}
+              onClick={decryptRecord}
+              disabled={busy}
+            >
+              Decrypt Securely
+            </button>
+          </div>
 
-    {error && <div className={styles.errorBox}>{error}</div>}
-  </section>
+          {error && <div className={styles.errorBox}>{error}</div>}
+        </section>
 
-  <section className={styles.panel}>
-    <h2>Encrypted / Decrypted Output</h2>
-    <pre className={styles.result}>
-      {result || "Awaiting transaction execution..."}
-    </pre>
-  </section>
-</main>
-
+        <section className={styles.panel}>
+          <h2>Encrypted / Decrypted Output</h2>
+          <pre className={styles.result}>
+            {result || "Awaiting transaction execution..."}
+          </pre>
+        </section>
+      </div>
+    </main>
   );
 }
