@@ -105,68 +105,84 @@ export default function Home() {
   }
 
   return (
-    <main className={styles.page}>
-      <section className={styles.panel}>
-        <h1>Secure Transactions</h1>
-        <p className={styles.subtitle}>Envelope encryption with AES-256-GCM</p>
+  <main className={styles.page}>
+  <header className={styles.header}>
+    <h1>Secure Transaction Console</h1>
+    <p className={styles.subtitle}>
+      Envelope Encryption using AES-256-GCM with Integrity Protection
+    </p>
+  </header>
 
-        <label className={styles.label}>
-          Party ID
-          <input
-            className={styles.input}
-            value={partyId}
-            onChange={(e) => setPartyId(e.target.value)}
-            placeholder="party_123"
-          />
-        </label>
+  <section className={styles.panel}>
+    <h2>Transaction Input</h2>
 
-        <label className={styles.label}>
-          Payload JSON
-          <textarea
-            className={styles.textarea}
-            value={payloadText}
-            onChange={(e) => setPayloadText(e.target.value)}
-            rows={8}
-          />
-        </label>
+    <div className={styles.field}>
+      <label>Party ID</label>
+      <input
+        className={styles.input}
+        value={partyId}
+        onChange={(e) => setPartyId(e.target.value)}
+        placeholder="e.g. party_123"
+      />
+    </div>
 
-        <label className={styles.label}>
-          Transaction ID
-          <input
-            className={styles.input}
-            value={txId}
-            onChange={(e) => setTxId(e.target.value)}
-            placeholder="auto-filled after encrypt"
-          />
-        </label>
+    <div className={styles.field}>
+      <label>Payload (JSON Format)</label>
+      <textarea
+        className={styles.textarea}
+        value={payloadText}
+        onChange={(e) => setPayloadText(e.target.value)}
+        rows={8}
+        placeholder='{"amount": 5000, "currency": "INR"}'
+      />
+    </div>
 
-        <div className={styles.actions}>
-          <button
-            className={styles.button}
-            onClick={encryptAndSave}
-            disabled={busy || !canSubmit}
-          >
-            Encrypt and Save
-          </button>
-          <button className={styles.button} onClick={fetchRecord} disabled={busy}>
-            Fetch
-          </button>
-          <button
-            className={styles.button}
-            onClick={decryptRecord}
-            disabled={busy}
-          >
-            Decrypt
-          </button>
-        </div>
+    <div className={styles.field}>
+      <label>Transaction ID</label>
+      <input
+        className={styles.input}
+        value={txId}
+        onChange={(e) => setTxId(e.target.value)}
+        placeholder="Auto-generated after encryption"
+      />
+    </div>
 
-        {error ? <p className={styles.error}>{error}</p> : null}
-      </section>
+    <div className={styles.actions}>
+      <button
+        className={styles.primaryButton}
+        onClick={encryptAndSave}
+        disabled={busy || !canSubmit}
+      >
+        Encrypt & Store
+      </button>
 
-      <section className={styles.panel}>
-        <h2>Result</h2>
-        <pre className={styles.result}>{result || "No result yet."}</pre>
-      </section>
-    </main>
+      <button
+        className={styles.secondaryButton}
+        onClick={fetchRecord}
+        disabled={busy}
+      >
+        Retrieve Record
+      </button>
+
+      <button
+        className={styles.dangerButton}
+        onClick={decryptRecord}
+        disabled={busy}
+      >
+        Decrypt Securely
+      </button>
+    </div>
+
+    {error && <div className={styles.errorBox}>{error}</div>}
+  </section>
+
+  <section className={styles.panel}>
+    <h2>Encrypted / Decrypted Output</h2>
+    <pre className={styles.result}>
+      {result || "Awaiting transaction execution..."}
+    </pre>
+  </section>
+</main>
+
   );
 }
